@@ -174,7 +174,7 @@ export default function CrudPage({ config }) {
         </h2>
         <button className="btn btn-primary" onClick={abrirNovo} disabled={!!erro && erro.status === 0}>
           <i className="bi bi-plus-lg me-1" />
-          Novo {singular.toLowerCase()}
+          {artigo === 'a' ? 'Nova' : 'Novo'} {singular.toLowerCase()}
         </button>
       </div>
 
@@ -263,7 +263,7 @@ export default function CrudPage({ config }) {
 
       {form && (
         <Modal
-          titulo={form.id ? `Editar ${singular.toLowerCase()}` : `Novo ${singular.toLowerCase()}`}
+          titulo={form.id ? `Editar ${singular.toLowerCase()}` : `${artigo === 'a' ? 'Nova' : 'Novo'} ${singular.toLowerCase()}`}
           onClose={() => !form.saving && setForm(null)}
           size="modal-lg"
         >
