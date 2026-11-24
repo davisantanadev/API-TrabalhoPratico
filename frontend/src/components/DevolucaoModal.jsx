@@ -27,7 +27,7 @@ export default function DevolucaoModal({ aluguel, ctx }) {
     const er = {}
     if (!data) er.data = 'Informe a data de devolução.'
     else if (data < paraInputData(aluguel.dataInicio)) er.data = 'A devolução não pode ser anterior ao início.'
-    if (km === '' || Number(km) < 0) er.km = 'Informe uma quilometragem válida (≥ 0).'
+    if (km === '' || !Number.isInteger(Number(km)) || Number(km) < 0) er.km = 'Informe uma quilometragem inteira válida (≥ 0).'
     else if (Number(km) < Number(aluguel.quilometragemInicial)) er.km = 'A km final não pode ser menor que a km inicial.'
     if (total === '' || Number(total) < 0) er.total = 'Informe um valor total válido.'
     setErros(er)

@@ -8,7 +8,8 @@ const opcoes = (lista, campo = 'nome') => (lista || []).map((x) => ({ value: x.i
 
 const vazio = (v) => v === undefined || v === null || String(v).trim() === ''
 const numOuNull = (v) => (vazio(v) ? null : Number(v))
-const dataOuNull = (v) => (vazio(v) ? null : v)
+// Preserva a hora original quando a data (yyyy-MM-dd) não foi alterada; senão envia meia-noite.
+const dataComHora = (novo, orig) => (vazio(novo) ? null : orig && paraInputData(orig) === novo ? orig : `${novo}T00:00:00`)
 const emailOk = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
 const filtroComVeiculos = {
@@ -207,6 +208,7 @@ export const alugueis = {
     quilometragemFinal: r?.quilometragemFinal ?? '',
     valorDiaria: r?.valorDiaria ?? '',
     valorTotal: r?.valorTotal ?? '',
+    _orig: { dataInicio: r?.dataInicio, dataFim: r?.dataFim, dataDevolucao: r?.dataDevolucao },
   }),
   validate: (v) => {
     const kmI = Number(v.quilometragemInicial)
@@ -216,21 +218,28 @@ export const alugueis = {
       veiculoId: vazio(v.veiculoId) ? 'Selecione o veículo.' : undefined,
       dataInicio: vazio(v.dataInicio) ? 'A data de início é obrigatória.' : undefined,
       dataFim: vazio(v.dataFim) ? 'A data de fim é obrigatória.' : !vazio(v.dataInicio) && v.dataFim < v.dataInicio ? 'A data de fim não pode ser anterior à data de início.' : undefined,
-      quilometragemInicial: vazio(v.quilometragemInicial) ? 'A quilometragem inicial é obrigatória.' : kmI < 0 ? 'A quilometragem inicial não pode ser negativa.' : undefined,
-      quilometragemFinal: !vazio(v.quilometragemFinal) && kmF < 0 ? 'A quilometragem final não pode ser negativa.' : undefined,
-      valorDiaria: vazio(v.valorDiaria) ? 'O valor da diária é obrigatório.' : Number(v.valorDiaria) <= 0 ? 'O valor da diária deve ser maior que zero.' : undefined,
+      dataDevolucao: !vazio(v.dataDevolucao) && !vazio(v.dataInicio) && v.dataDevolucao < v.dataInicio ? 'A devolução não pode ser anterior ao início.' : undefined,
+      quilometragemInicial: vazio(v.quilometragemInicial) ? 'A quilometragem inicial é obrigatória.' : !Number.isInteger(kmI) || kmI < 0 ? 'A quilometragem inicial deve ser um inteiro não negativo.' : undefined,
+      quilometragemFinal: vazio(v.quilometragemFinal)
+        ? undefined
+        : !Number.isInteger(kmF) || kmF < 0
+          ? 'A quilometragem final deve ser um inteiro não negativo.'
+          : !vazio(v.quilometragemInicial) && kmF < kmI
+            ? 'A km final não pode ser menor que a km inicial.'
+            : undefined,
+      valorDiaria: vazio(v.valorDiaria) ? 'O valor da diária é obrigatório.' : Number(v.valorDiaria) < 0.01 || Number(v.valorDiaria) > 999999 ? 'O valor da diária deve estar entre 0,01 e 999.999.' : undefined,
       valorTotal: !vazio(v.valorTotal) && Number(v.valorTotal) < 0 ? 'O valor total não pode ser negativo.' : undefined,
     }
   },
   toPayload: (v) => ({
     clienteId: Number(v.clienteId),
     veiculoId: Number(v.veiculoId),
-    dataInicio: v.dataInicio,
-    dataFim: v.dataFim,
-    dataDevolucao: dataOuNull(v.dataDevolucao),
+    dataInicio: dataComHora(v.dataInicio, v._orig?.dataInicio),
+    dataFim: dataComHora(v.dataFim, v._orig?.dataFim),
+    dataDevolucao: dataComHora(v.dataDevolucao, v._orig?.dataDevolucao),
     quilometragemInicial: Number(v.quilometragemInicial),
-    quilometragemFinal: numOuNull(v.quilometragemFinal),
+    quilometragemFinal: vazio(v.dataDevolucao) ? null : numOuNull(v.quilometragemFinal),
     valorDiaria: Number(v.valorDiaria),
-    valorTotal: numOuNull(v.valorTotal),
+    valorTotal: vazio(v.dataDevolucao) ? null : numOuNull(v.valorTotal),
   }),
 }
