@@ -21,11 +21,18 @@ namespace LocadoraVeiculos.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Cliente>>> GetClientes()
+        public async Task<ActionResult<IEnumerable<Cliente>>> GetClientes([FromQuery] string nome, [FromQuery] string cpf, [FromQuery] string email)
         {
             try
             {
-                return await _context.Clientes.ToListAsync();
+                IQueryable<Cliente> query = _context.Clientes;
+                if (!string.IsNullOrWhiteSpace(nome))
+                    query = query.Where(c => EF.Functions.Like(c.Nome, $"%{nome.Trim()}%"));
+                if (!string.IsNullOrWhiteSpace(cpf))
+                    query = query.Where(c => EF.Functions.Like(c.CPF, $"%{cpf.Trim()}%"));
+                if (!string.IsNullOrWhiteSpace(email))
+                    query = query.Where(c => EF.Functions.Like(c.Email, $"%{email.Trim()}%"));
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -95,6 +102,9 @@ namespace LocadoraVeiculos.Controllers
                 var cliente = await _context.Clientes.FindAsync(id);
                 if (cliente == null) return NotFound("Cliente não encontrado.");
 
+                if (await _context.Alugueis.AnyAsync(a => a.ClienteId == id))
+                    return Conflict("Não é possível excluir: existem aluguéis vinculados a este cliente.");
+
                 _context.Clientes.Remove(cliente);
                 await _context.SaveChangesAsync();
                 return NoContent();
@@ -119,6 +129,7 @@ namespace LocadoraVeiculos.Controllers
                             from a in alugueisGroup.DefaultIfEmpty()
                             select new
                             {
+                                ClienteId = c.Id,
                                 ClienteNome = c.Nome,
                                 ClienteCPF = c.CPF,
                                 PossuiAluguel = a != null,
