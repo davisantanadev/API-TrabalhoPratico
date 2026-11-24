@@ -31,6 +31,13 @@ builder.Services.AddSwaggerGen(c =>
     if (File.Exists(xmlPath)) c.IncludeXmlComments(xmlPath);
 });
 
+// CORS para o front-end local (Vite)
+const string FrontendCors = "FrontendLocal";
+builder.Services.AddCors(o => o.AddPolicy(FrontendCors, p => p
+    .WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+    .AllowAnyHeader()
+    .AllowAnyMethod()));
+
 var app = builder.Build();
 
 // Swagger habilitado sempre (inclusive fora de Development) para facilitar os testes
@@ -42,6 +49,7 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseHttpsRedirection();
+app.UseCors(FrontendCors);
 app.UseAuthorization();
 app.MapControllers();
 
