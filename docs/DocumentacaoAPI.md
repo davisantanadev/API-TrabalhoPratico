@@ -13,7 +13,26 @@
 | 204 No Content | Sucesso sem corpo | PUT e DELETE bem-sucedidos |
 | 400 Bad Request | Requisição inválida | Campos obrigatórios ausentes, formato inválido (ex.: e-mail), valores fora da faixa, ou ID da rota diferente do ID do corpo no PUT |
 | 404 Not Found | Não encontrado | ID inexistente em GET/{id}, PUT ou DELETE |
-| 500 Internal Server Error | Erro interno | Falha no banco (ex.: chave estrangeira inexistente, exclusão de registro que possui dependentes, banco fora do ar) |
+| 409 Conflict | Conflito | DELETE de registro que possui dependentes (ex.: fabricante com veículos vinculados). Corpo: mensagem em português, p. ex. `Não é possível excluir: existem veículos vinculados a este fabricante.` |
+| 500 Internal Server Error | Erro interno | Falha no banco (ex.: chave estrangeira inexistente, banco fora do ar) |
+
+## CORS
+
+A API libera requisições dos front-ends locais `http://localhost:5173` e `http://127.0.0.1:5173` (Vite), com qualquer método e qualquer header. Outras origens não recebem os headers `Access-Control-*`. O preflight (`OPTIONS`) é respondido com 204.
+
+## Filtros opcionais nas listagens (query string)
+
+Todos os parâmetros são opcionais e combináveis (AND); sem parâmetros, a listagem retorna tudo. A filtragem é feita no banco. Textos: busca "contém", sem diferenciar maiúsculas/minúsculas. Valor inválido em tipo numérico, booleano ou data retorna 400.
+
+| Rota | Parâmetros |
+|---|---|
+| `GET /api/Fabricantes` | `nome` (contém), `comVeiculos` (`true` = só com veículos, `false` = só sem veículos) |
+| `GET /api/Categorias` | `nome` (contém), `comVeiculos` (`true`/`false`) |
+| `GET /api/Clientes` | `nome` (contém), `cpf` (contém), `email` (contém) |
+| `GET /api/Veiculos` | `modelo` (contém), `fabricanteId`, `categoriaId`, `anoMin`, `anoMax` (intervalo inclusivo de `anoFabricacao`) |
+| `GET /api/Alugueis` | `clienteId`, `veiculoId`, `status` (`ativo` = sem `dataDevolucao`; `devolvido` = com `dataDevolucao`; outro valor = 400), `dataInicioDe`, `dataInicioAte` (formato `yyyy-MM-dd`, ambos inclusivos, aplicados a `dataInicio`) |
+
+Exemplo: `GET /api/Alugueis?status=ativo&dataInicioDe=2026-10-01&dataInicioAte=2026-11-30`
 
 ---
 
@@ -21,11 +40,11 @@
 
 | Método | Rota | Parâmetros | Corpo | Respostas |
 |---|---|---|---|---|
-| GET | `/api/Fabricantes` | – | – | 200, 500 |
+| GET | `/api/Fabricantes` | filtros opcionais (ver seção "Filtros opcionais") | – | 200, 400, 500 |
 | GET | `/api/Fabricantes/{id}` | `id` (rota, int) | – | 200, 404, 500 |
 | POST | `/api/Fabricantes` | – | Fabricante | 201, 400, 500 |
 | PUT | `/api/Fabricantes/{id}` | `id` (rota, int) | Fabricante | 204, 400, 404, 500 |
-| DELETE | `/api/Fabricantes/{id}` | `id` (rota, int) | – | 204, 404, 500 |
+| DELETE | `/api/Fabricantes/{id}` | `id` (rota, int) | – | 204, 404, 409, 500 |
 
 ```json
 { "id": 0, "nome": "Volkswagen" }
@@ -36,11 +55,11 @@ Regras: `nome` obrigatório, máx. 100 caracteres.
 
 | Método | Rota | Parâmetros | Corpo | Respostas |
 |---|---|---|---|---|
-| GET | `/api/Categorias` | – | – | 200, 500 |
+| GET | `/api/Categorias` | filtros opcionais (ver seção "Filtros opcionais") | – | 200, 400, 500 |
 | GET | `/api/Categorias/{id}` | `id` (rota, int) | – | 200, 404, 500 |
 | POST | `/api/Categorias` | – | Categoria | 201, 400, 500 |
 | PUT | `/api/Categorias/{id}` | `id` (rota, int) | Categoria | 204, 400, 404, 500 |
-| DELETE | `/api/Categorias/{id}` | `id` (rota, int) | – | 204, 404, 500 |
+| DELETE | `/api/Categorias/{id}` | `id` (rota, int) | – | 204, 404, 409, 500 |
 
 ```json
 { "id": 0, "nome": "SUV" }
@@ -51,11 +70,11 @@ Regras: `nome` obrigatório, máx. 50 caracteres.
 
 | Método | Rota | Parâmetros | Corpo | Respostas |
 |---|---|---|---|---|
-| GET | `/api/Clientes` | – | – | 200, 500 |
+| GET | `/api/Clientes` | filtros opcionais (ver seção "Filtros opcionais") | – | 200, 400, 500 |
 | GET | `/api/Clientes/{id}` | `id` (rota, int) | – | 200, 404, 500 |
 | POST | `/api/Clientes` | – | Cliente | 201, 400, 500 |
 | PUT | `/api/Clientes/{id}` | `id` (rota, int) | Cliente | 204, 400, 404, 500 |
-| DELETE | `/api/Clientes/{id}` | `id` (rota, int) | – | 204, 404, 500 |
+| DELETE | `/api/Clientes/{id}` | `id` (rota, int) | – | 204, 404, 409, 500 |
 | GET | `/api/Clientes/ComOuSemAlugueis` | – | – | 200, 500 |
 
 ```json
@@ -67,11 +86,11 @@ Regras: `nome` obrigatório (máx. 200); `cpf` obrigatório (11 a 14 caracteres)
 
 | Método | Rota | Parâmetros | Corpo | Respostas |
 |---|---|---|---|---|
-| GET | `/api/Veiculos` | – | – | 200, 500 |
+| GET | `/api/Veiculos` | filtros opcionais (ver seção "Filtros opcionais") | – | 200, 400, 500 |
 | GET | `/api/Veiculos/{id}` | `id` (rota, int) | – | 200, 404, 500 |
 | POST | `/api/Veiculos` | – | Veiculo | 201, 400, 500 |
 | PUT | `/api/Veiculos/{id}` | `id` (rota, int) | Veiculo | 204, 400, 404, 500 |
-| DELETE | `/api/Veiculos/{id}` | `id` (rota, int) | – | 204, 404, 500 |
+| DELETE | `/api/Veiculos/{id}` | `id` (rota, int) | – | 204, 404, 409, 500 |
 | GET | `/api/Veiculos/Detalhes` | – | – | 200, 500 |
 | GET | `/api/Veiculos/NuncaAlugados` | – | – | 200, 500 |
 
@@ -84,7 +103,7 @@ Regras: `modelo` obrigatório (máx. 100); `anoFabricacao` entre 1950 e 2100; `q
 
 | Método | Rota | Parâmetros | Corpo | Respostas |
 |---|---|---|---|---|
-| GET | `/api/Alugueis` | – | – | 200, 500 |
+| GET | `/api/Alugueis` | filtros opcionais (ver seção "Filtros opcionais") | – | 200, 400, 500 |
 | GET | `/api/Alugueis/{id}` | `id` (rota, int) | – | 200, 404, 500 |
 | POST | `/api/Alugueis` | – | Aluguel | 201, 400, 500 |
 | PUT | `/api/Alugueis/{id}` | `id` (rota, int) | Aluguel | 204, 400, 404, 500 |
@@ -119,3 +138,15 @@ Regras: datas e `quilometragemInicial` obrigatórias; `valorDiaria` > 0; `client
 | 3 | `GET /api/Veiculos/NuncaAlugados` | LEFT JOIN + `IS NULL` (Veículos × Aluguéis) | Veículos que nunca foram alugados |
 | 4 | `GET /api/Alugueis/Ativos` | INNER JOIN (Aluguéis × Clientes × Veículos) | Aluguéis sem devolução registrada |
 | 5 | `GET /api/Alugueis/PorCategoria/{categoriaId}` | INNER JOIN (Aluguéis × Veículos) | Aluguéis de veículos de uma categoria |
+
+### Campos retornados pelas consultas com JOIN
+
+Os campos de id foram acrescentados para facilitar o front-end (nenhum campo anterior foi removido).
+
+| Rota | Campos |
+|---|---|
+| `GET /api/Clientes/ComOuSemAlugueis` | `clienteId`, `clienteNome`, `clienteCPF`, `possuiAluguel`, `aluguelId` |
+| `GET /api/Veiculos/Detalhes` | `id`, `modelo`, `anoFabricacao`, `quilometragem`, `fabricanteId`, `fabricanteNome`, `categoriaId`, `categoriaNome` |
+| `GET /api/Veiculos/NuncaAlugados` | `id`, `modelo`, `anoFabricacao`, `quilometragem` |
+| `GET /api/Alugueis/Ativos` | `aluguelId`, `dataInicio`, `clienteId`, `clienteNome`, `veiculoId`, `veiculoModelo`, `valorDiaria` |
+| `GET /api/Alugueis/PorCategoria/{categoriaId}` | `aluguelId`, `clienteId`, `veiculoId`, `veiculoModelo`, `dataInicio` |
