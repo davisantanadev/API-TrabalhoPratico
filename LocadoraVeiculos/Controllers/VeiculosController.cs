@@ -21,11 +21,20 @@ namespace LocadoraVeiculos.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Veiculo>>> GetVeiculos()
+        public async Task<ActionResult<IEnumerable<Veiculo>>> GetVeiculos(
+            [FromQuery] string modelo, [FromQuery] int? fabricanteId, [FromQuery] int? categoriaId,
+            [FromQuery] int? anoMin, [FromQuery] int? anoMax)
         {
             try
             {
-                return await _context.Veiculos.ToListAsync();
+                IQueryable<Veiculo> query = _context.Veiculos;
+                if (!string.IsNullOrWhiteSpace(modelo))
+                    query = query.Where(v => EF.Functions.Like(v.Modelo, $"%{modelo.Trim()}%"));
+                if (fabricanteId.HasValue) query = query.Where(v => v.FabricanteId == fabricanteId.Value);
+                if (categoriaId.HasValue) query = query.Where(v => v.CategoriaId == categoriaId.Value);
+                if (anoMin.HasValue) query = query.Where(v => v.AnoFabricacao >= anoMin.Value);
+                if (anoMax.HasValue) query = query.Where(v => v.AnoFabricacao <= anoMax.Value);
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -95,6 +104,9 @@ namespace LocadoraVeiculos.Controllers
                 var veiculo = await _context.Veiculos.FindAsync(id);
                 if (veiculo == null) return NotFound("Veículo não encontrado.");
 
+                if (await _context.Alugueis.AnyAsync(a => a.VeiculoId == id))
+                    return Conflict("Não é possível excluir: existem aluguéis vinculados a este veículo.");
+
                 _context.Veiculos.Remove(veiculo);
                 await _context.SaveChangesAsync();
                 return NoContent();
@@ -119,9 +131,13 @@ namespace LocadoraVeiculos.Controllers
                     .Include(v => v.Categoria)
                     .Select(v => new
                     {
+                        v.Id,
                         v.Modelo,
                         v.AnoFabricacao,
+                        v.Quilometragem,
+                        v.FabricanteId,
                         FabricanteNome = v.Fabricante.Nome,
+                        v.CategoriaId,
                         CategoriaNome = v.Categoria.Nome
                     })
                     .ToListAsync();
@@ -149,6 +165,7 @@ namespace LocadoraVeiculos.Controllers
                             where a == null
                             select new
                             {
+                                v.Id,
                                 v.Modelo,
                                 v.AnoFabricacao,
                                 v.Quilometragem
