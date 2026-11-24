@@ -1,0 +1,16 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# Node / front-end
+node_modules/
+dist/
+
+# Vídeos (grandes demais para o GitHub; enviados pelo Canvas)
+*.mp4
+
+# Banco SQLite temporário
+*.db-shm
+*.db-wal
