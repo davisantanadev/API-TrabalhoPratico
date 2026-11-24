@@ -1,0 +1,30 @@
+:root { --sidebar-w: 240px; --brand: #0d6efd; --brand-dark: #0a2a5e; }
+body { background: #f4f6fa; }
+.app-shell { display: flex; min-height: 100vh; }
+.sidebar { width: var(--sidebar-w); background: var(--brand-dark); color: #fff; flex-shrink: 0; }
+.sidebar .brand { padding: 1.1rem 1.25rem; font-weight: 700; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,.12); }
+.sidebar .nav-link { color: rgba(255,255,255,.75); padding: .65rem 1.25rem; border-radius: 0; }
+.sidebar .nav-link:hover { color: #fff; background: rgba(255,255,255,.08); }
+.sidebar .nav-link.active { color: #fff; background: var(--brand); }
+.sidebar .nav-link i { margin-right: .6rem; }
+.main { flex: 1; min-width: 0; }
+.topbar-mobile { display: none; background: var(--brand-dark); color: #fff; }
+.page-pad { padding: 1.5rem; }
+@media (max-width: 991.98px) {
+  .sidebar { position: fixed; z-index: 1040; inset: 0 auto 0 0; transform: translateX(-100%); transition: transform .2s; }
+  .sidebar.open { transform: none; }
+  .topbar-mobile { display: flex; align-items: center; gap: .75rem; padding: .75rem 1rem; }
+  .page-pad { padding: 1rem; }
+}
+.sidebar-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1039; }
+.card { border: 0; box-shadow: 0 1px 3px rgba(16,24,40,.08); }
+.stat-card .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; font-size: 1.4rem; }
+.stat-card .stat-value { font-size: 1.9rem; font-weight: 700; line-height: 1; }
+.table thead th { white-space: nowrap; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: #5b6475; }
+.modal-backdrop-custom { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1050; }
+.modal.show-custom { display: block; z-index: 1055; overflow-y: auto; }
+.toast-area { position: fixed; top: 1rem; right: 1rem; z-index: 1100; display: flex; flex-direction: column; gap: .5rem; width: min(380px, calc(100vw - 2rem)); }
+.route-pill { font-family: ui-monospace, Consolas, monospace; background: #0f172a; color: #7dd3fc; padding: .45rem .8rem; border-radius: .5rem; display: inline-block; font-size: .95rem; word-break: break-all; }
+.route-pill .verb { color: #86efac; font-weight: 700; margin-right: .5rem; }
+.join-desc { border-left: 4px solid var(--brand); background: #eef4ff; padding: .75rem 1rem; border-radius: 0 .5rem .5rem 0; }
+.sql-box { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; background: #f1f5f9; border-radius: .5rem; padding: .6rem .8rem; white-space: pre-wrap; }
