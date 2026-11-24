@@ -13,7 +13,7 @@ Repositório: https://github.com/davisantanadev/API-TrabalhoPratico
 |---|---|
 | `LocadoraVeiculos/` | Back-end (TP1): API ASP.NET Core 8, EF Core, modelos, controllers e banco SQLite `locadora.db` |
 | `frontend/` | Front-end (TP2): aplicação React + Vite + Bootstrap que consome a API |
-| `docs/` | Documentação: `DocumentacaoAPI.md` (endpoints), `RoteiroVideo.md` (roteiro do pitch), `RelatorioTestes.md`, `wireframes/` (telas desenhadas), `screenshots/` (capturas do front-end) |
+| `docs/` | Documentação: `DocumentacaoAPI.md` (endpoints), `RelatorioTestes.md`, `wireframes/` (telas desenhadas), `screenshots/` (capturas do front-end) |
 | `README.md` | Este arquivo |
 
 ## Pré-requisitos
@@ -52,6 +52,5 @@ Abra http://localhost:5173. O Vite faz proxy de `/api` para `https://localhost:7
 ## Documentação
 
 - [Documentação da API (endpoints, códigos de resposta e filtros)](docs/DocumentacaoAPI.md)
-- [Roteiro do pitch em vídeo](docs/RoteiroVideo.md)
 - [README do front-end (telas, estrutura e build)](frontend/README.md)
 - Wireframes no Figma: https://www.figma.com/design/aIJADObNyI8M4PpqKf1J1X
