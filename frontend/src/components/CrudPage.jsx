@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError } from '../api'
 import Modal from './Modal'
 import ConfirmModal from './ConfirmModal'
@@ -88,20 +88,24 @@ export default function CrudPage({ config }) {
   const [excluir, setExcluir] = useState(null) // {row, busy}
   const [extra, setExtra] = useState(null) // modal customizado (ex.: devolução)
 
+  const reqId = useRef(0)
   const carregar = useCallback(
     async (params) => {
+      const id = ++reqId.current
       setLoading(true)
       setErro(null)
       try {
         const keys = Object.keys(refsConfig)
         const [lista, ...listas] = await Promise.all([resource.list(params), ...keys.map((k) => refsConfig[k].list())])
+        if (id !== reqId.current) return
         setRows(Array.isArray(lista) ? lista : [])
         setRefs(Object.fromEntries(keys.map((k, i) => [k, listas[i] || []])))
       } catch (e) {
+        if (id !== reqId.current) return
         setErro(e)
         setRows([])
       } finally {
-        setLoading(false)
+        if (id === reqId.current) setLoading(false)
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

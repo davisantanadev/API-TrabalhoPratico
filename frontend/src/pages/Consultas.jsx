@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import * as api from '../api'
 import DynamicTable from '../components/DynamicTable'
 import { Carregando, Erro, Vazio } from '../components/States'
@@ -71,22 +71,27 @@ export default function Consultas() {
     api.categorias.list().then(setCategorias).catch(() => {})
   }, [])
 
+  const reqId = useRef(0)
   const executar = useCallback(async () => {
+    const id = ++reqId.current
     if (q.precisaCategoria && !categoriaId) {
       setDados(null)
       setErro(null)
+      setLoading(false)
       return
     }
     setLoading(true)
     setErro(null)
     try {
       const r = await q.chamar(categoriaId)
+      if (id !== reqId.current) return
       setDados(Array.isArray(r) ? r : r ? [r] : [])
     } catch (e) {
+      if (id !== reqId.current) return
       setErro(e)
       setDados(null)
     } finally {
-      setLoading(false)
+      if (id === reqId.current) setLoading(false)
     }
   }, [q, categoriaId])
 
