@@ -21,11 +21,35 @@ namespace LocadoraVeiculos.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Aluguel>>> GetAlugueis()
+        public async Task<ActionResult<IEnumerable<Aluguel>>> GetAlugueis(
+            [FromQuery] int? clienteId, [FromQuery] int? veiculoId, [FromQuery] string status,
+            [FromQuery] DateTime? dataInicioDe, [FromQuery] DateTime? dataInicioAte)
         {
             try
             {
-                return await _context.Alugueis.ToListAsync();
+                IQueryable<Aluguel> query = _context.Alugueis;
+                if (clienteId.HasValue) query = query.Where(a => a.ClienteId == clienteId.Value);
+                if (veiculoId.HasValue) query = query.Where(a => a.VeiculoId == veiculoId.Value);
+                if (!string.IsNullOrWhiteSpace(status))
+                {
+                    switch (status.Trim().ToLowerInvariant())
+                    {
+                        case "ativo": query = query.Where(a => a.DataDevolucao == null); break;
+                        case "devolvido": query = query.Where(a => a.DataDevolucao != null); break;
+                        default: return BadRequest("Valor inválido para 'status'. Use 'ativo' ou 'devolvido'.");
+                    }
+                }
+                if (dataInicioDe.HasValue)
+                {
+                    var de = dataInicioDe.Value.Date;
+                    query = query.Where(a => a.DataInicio >= de);
+                }
+                if (dataInicioAte.HasValue)
+                {
+                    var ate = dataInicioAte.Value.Date.AddDays(1); // inclusivo: até o fim do dia informado
+                    query = query.Where(a => a.DataInicio < ate);
+                }
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -122,7 +146,9 @@ namespace LocadoraVeiculos.Controllers
                             {
                                 AluguelId = a.Id,
                                 DataInicio = a.DataInicio,
+                                ClienteId = c.Id,
                                 ClienteNome = c.Nome,
+                                VeiculoId = v.Id,
                                 VeiculoModelo = v.Modelo,
                                 ValorDiaria = a.ValorDiaria
                             };
@@ -152,6 +178,7 @@ namespace LocadoraVeiculos.Controllers
                             {
                                 AluguelId = a.Id,
                                 ClienteId = a.ClienteId,
+                                VeiculoId = v.Id,
                                 VeiculoModelo = v.Modelo,
                                 DataInicio = a.DataInicio
                             };
