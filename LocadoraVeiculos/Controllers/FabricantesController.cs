@@ -21,11 +21,18 @@ namespace LocadoraVeiculos.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Fabricante>>> GetFabricantes()
+        public async Task<ActionResult<IEnumerable<Fabricante>>> GetFabricantes([FromQuery] string nome, [FromQuery] bool? comVeiculos)
         {
             try
             {
-                return await _context.Fabricantes.ToListAsync();
+                IQueryable<Fabricante> query = _context.Fabricantes;
+                if (!string.IsNullOrWhiteSpace(nome))
+                    query = query.Where(e => EF.Functions.Like(e.Nome, $"%{nome.Trim()}%"));
+                if (comVeiculos == true)
+                    query = query.Where(e => e.Veiculos.Any());
+                else if (comVeiculos == false)
+                    query = query.Where(e => !e.Veiculos.Any());
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -94,6 +101,9 @@ namespace LocadoraVeiculos.Controllers
             {
                 var fabricante = await _context.Fabricantes.FindAsync(id);
                 if (fabricante == null) return NotFound("Fabricante não encontrado.");
+
+                if (await _context.Veiculos.AnyAsync(v => v.FabricanteId == id))
+                    return Conflict("Não é possível excluir: existem veículos vinculados a este fabricante.");
 
                 _context.Fabricantes.Remove(fabricante);
                 await _context.SaveChangesAsync();

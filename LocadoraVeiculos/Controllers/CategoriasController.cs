@@ -21,11 +21,18 @@ namespace LocadoraVeiculos.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Categoria>>> GetCategorias()
+        public async Task<ActionResult<IEnumerable<Categoria>>> GetCategorias([FromQuery] string nome, [FromQuery] bool? comVeiculos)
         {
             try
             {
-                return await _context.Categorias.ToListAsync();
+                IQueryable<Categoria> query = _context.Categorias;
+                if (!string.IsNullOrWhiteSpace(nome))
+                    query = query.Where(e => EF.Functions.Like(e.Nome, $"%{nome.Trim()}%"));
+                if (comVeiculos == true)
+                    query = query.Where(e => e.Veiculos.Any());
+                else if (comVeiculos == false)
+                    query = query.Where(e => !e.Veiculos.Any());
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -94,6 +101,9 @@ namespace LocadoraVeiculos.Controllers
             {
                 var categoria = await _context.Categorias.FindAsync(id);
                 if (categoria == null) return NotFound("Categoria não encontrada.");
+
+                if (await _context.Veiculos.AnyAsync(v => v.CategoriaId == id))
+                    return Conflict("Não é possível excluir: existem veículos vinculados a esta categoria.");
 
                 _context.Categorias.Remove(categoria);
                 await _context.SaveChangesAsync();
