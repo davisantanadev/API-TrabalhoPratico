@@ -27,7 +27,7 @@ namespace LocadoraVeiculos.Controllers
             {
                 IQueryable<Fabricante> query = _context.Fabricantes;
                 if (!string.IsNullOrWhiteSpace(nome))
-                    query = query.Where(e => EF.Functions.Like(e.Nome, $"%{nome.Trim()}%"));
+                    query = query.Where(e => EF.Functions.Like(e.Nome, LikeHelper.Contem(nome), "\\"));
                 if (comVeiculos == true)
                     query = query.Where(e => e.Veiculos.Any());
                 else if (comVeiculos == false)

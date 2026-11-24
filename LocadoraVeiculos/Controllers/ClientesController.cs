@@ -27,11 +27,11 @@ namespace LocadoraVeiculos.Controllers
             {
                 IQueryable<Cliente> query = _context.Clientes;
                 if (!string.IsNullOrWhiteSpace(nome))
-                    query = query.Where(c => EF.Functions.Like(c.Nome, $"%{nome.Trim()}%"));
+                    query = query.Where(c => EF.Functions.Like(c.Nome, LikeHelper.Contem(nome), "\\"));
                 if (!string.IsNullOrWhiteSpace(cpf))
-                    query = query.Where(c => EF.Functions.Like(c.CPF, $"%{cpf.Trim()}%"));
+                    query = query.Where(c => EF.Functions.Like(c.CPF, LikeHelper.Contem(cpf), "\\"));
                 if (!string.IsNullOrWhiteSpace(email))
-                    query = query.Where(c => EF.Functions.Like(c.Email, $"%{email.Trim()}%"));
+                    query = query.Where(c => EF.Functions.Like(c.Email, LikeHelper.Contem(email), "\\"));
                 return await query.ToListAsync();
             }
             catch (Exception ex)

@@ -29,7 +29,7 @@ namespace LocadoraVeiculos.Controllers
             {
                 IQueryable<Veiculo> query = _context.Veiculos;
                 if (!string.IsNullOrWhiteSpace(modelo))
-                    query = query.Where(v => EF.Functions.Like(v.Modelo, $"%{modelo.Trim()}%"));
+                    query = query.Where(v => EF.Functions.Like(v.Modelo, LikeHelper.Contem(modelo), "\\"));
                 if (fabricanteId.HasValue) query = query.Where(v => v.FabricanteId == fabricanteId.Value);
                 if (categoriaId.HasValue) query = query.Where(v => v.CategoriaId == categoriaId.Value);
                 if (anoMin.HasValue) query = query.Where(v => v.AnoFabricacao >= anoMin.Value);
